@@ -74,16 +74,28 @@
             <br />
         </div>
     </form>
-<%--    <div class="grid-container-group">
+    <div class="grid-container-group">
         <% SEAT_MAP.ForEach(eachGroup =>{ %>
              <div class="grid-container">
-                <% eachGroup.seatPositions.ForEach(eachPos => {%>
+                <% List<JObject> seatPositions = eachGroup["SEAT_POSITIONS"].ToObject<List<JObject>>();
+                    seatPositions.ForEach(eachPos => {%>
                         <div class='grid-item'>
                             afddsfa
                         </div>
                     <%}); %>
               </div>
          <%}); %>
-     </div>--%>
+     </div>
+
+
+            <%--<ng-container *ngFor="let group of data">
+    <div class="grid-container">
+      <ng-container *ngFor="let chair of group.chairs">
+        <div class='grid-item'>
+          {{callGetInfoStaffHere(group.group, chair.x, chair.y)}}
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>--%>
 </body>
 </html>

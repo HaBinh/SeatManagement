@@ -4,62 +4,42 @@ using System.Collections.Generic;
 
 namespace SeatManagement.Basic
 {
-    public class SeatPosition 
-    {
-        public SeatPosition(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int x { get; set; }    
-        public int y { get; set; }
-    }
-
-    public class RootObj
-    {
-        public RootObj(string group, List<SeatPosition> seatPostions)
-        {
-            this.group = group;
-            this.seatPostions = seatPostions;
-        }
-
-        public string group { get; set; }
-        public List<SeatPosition> seatPostions { get; set; }
-    }
-
     public partial class Index : System.Web.UI.Page
     {
         public string[] SEAT_GROUP = new string[6] { "A", "D", "B", "E", "C", "F" };
 
-        public List<RootObj> SEAT_MAP = new List<RootObj>();
+        public List<JObject> SEAT_MAP = new List<JObject>();
         protected void Page_Load(object sender, EventArgs e)
         {
             for (int i = 0; i < 4; i++)
             {
-                List<SeatPosition> SEAT_POSITIONS = new List<SeatPosition>();
+                List<JObject> SEAT_POSITIONS = new List<JObject>();
                 for (int y = 1; y <= 4; y++)
                 {
                     for (int x = 1; x <= 2; x++)
                     {
-                        SEAT_POSITIONS.Add(new SeatPosition(x, y));
+                        SEAT_POSITIONS.Add(new JObject { { "X", x }, { "Y", y } });
                     }
                 }
-                SEAT_MAP.Add(new RootObj(SEAT_GROUP[i], SEAT_POSITIONS));
+                SEAT_MAP.Add(new JObject { { "SEAT_GROUP", SEAT_GROUP[i] },
+                                           { "SEAT_POSITIONS", JToken.FromObject(SEAT_POSITIONS) }
+                        });
             }
-            SeatPosition[] tmp = { new SeatPosition(1, 1) };
-            List<SeatPosition> SEAT_POSITIONS_C_F = new List<SeatPosition>(tmp);
-            SEAT_MAP.Add(new RootObj(SEAT_GROUP[4], SEAT_POSITIONS_C_F));
-            SEAT_MAP.Add(new RootObj(SEAT_GROUP[5], SEAT_POSITIONS_C_F));
+            JObject[] tmp = { new JObject { { "X", 1 }, { "Y", 1 } } };
+            List<JObject> SEAT_POSITIONS_C_F = new List<JObject>(tmp);
+            SEAT_MAP.Add(new JObject { { "SEAT_GROUP", SEAT_GROUP[4] },
+                                       { "SEAT_POSITIONS", JToken.FromObject(SEAT_POSITIONS_C_F) }
+            });
+            SEAT_MAP.Add(new JObject { { "SEAT_GROUP", SEAT_GROUP[5] },
+                                       { "SEAT_POSITIONS", JToken.FromObject(SEAT_POSITIONS_C_F) }
+            });
 
             SEAT_MAP.ForEach(eachGroup =>
             {
                 //< div class="grid-container">
-                System.Diagnostics.Debug.WriteLine(eachGroup.group + ",");
-                List<SeatPosition> seatPositions = eachGroup.seatPostions;
+                List<JObject> seatPositions = eachGroup["SEAT_POSITIONS"].ToObject<List<JObject>>();
                 seatPositions.ForEach(eachPos =>
                 {
-                System.Diagnostics.Debug.WriteLine(eachPos.x + "-" + eachPos.y);
                     //< div class='grid-item'>
                 });
             });
