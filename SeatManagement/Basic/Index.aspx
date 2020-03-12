@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Index.aspx.cs" Inherits="SeatManagement.Basic.Index" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Index.aspx.cs" Inherits="SeatManagement.Basic.Index" %>
 
 <!DOCTYPE html>
 
@@ -6,6 +6,32 @@
 <head runat="server">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title></title>
+    <style type="text/css">
+        .box-name {
+          border: 1px green solid;
+          padding: 10px;
+        }
+
+        .grid-container {
+          display: grid;
+          grid-template-columns: auto auto;
+          background-color: #2196F3;
+          padding: 10px;
+        }
+        .grid-item {
+          background-color: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(0, 0, 0, 0.8);
+          padding: 20px;
+          font-size: 30px;
+          text-align: center;
+        }
+
+        .grid-container-group {
+          display: grid;
+          grid-template-columns: auto auto;
+          grid-gap: 20px;
+        }
+    </style>
 </head>
 <body>
     <form id="form1" runat="server">
@@ -29,7 +55,7 @@
             </asp:SqlDataSource>
             <asp:TextBox ID="SearchParam" runat="server"></asp:TextBox>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <asp:Button ID="ButtonSearch" runat="server" Text="検索" />
+            <asp:Button ID="ButtonSearch" runat="server" Text="検索" OnClick="ButtonSearch_Click" />
             <br />
             <br />
             <br />
@@ -74,28 +100,20 @@
             <br />
         </div>
     </form>
+
     <div class="grid-container-group">
-        <% SEAT_MAP.ForEach(eachGroup =>{ %>
-             <div class="grid-container">
-                <% List<JObject> seatPositions = eachGroup["SEAT_POSITIONS"].ToObject<List<JObject>>();
-                    seatPositions.ForEach(eachPos => {%>
-                        <div class='grid-item'>
-                            afddsfa
-                        </div>
-                    <%}); %>
-              </div>
-         <%}); %>
-     </div>
-
-
-            <%--<ng-container *ngFor="let group of data">
-    <div class="grid-container">
-      <ng-container *ngFor="let chair of group.chairs">
-        <div class='grid-item'>
-          {{callGetInfoStaffHere(group.group, chair.x, chair.y)}}
+        <% foreach (var group in SEAT_MAP)
+            { %>
+        <div class="grid-container">
+            <% foreach (var seatPos in group.seatPostions){ %>
+            <div class="grid-item">
+                <%=  getEmpNameBySeat(group.group, seatPos.x, seatPos.y)%>
+                <%--<asp:Label runat="server" Text='<%# getEmpNameBySeat("", 1, 1) %>'></asp:Label>--%>
+            </div>
+            <% } %>
         </div>
-      </ng-container>
+        <% } %>
     </div>
-  </ng-container>--%>
+
 </body>
 </html>
