@@ -32,6 +32,9 @@
             grid-template-columns: auto auto;
             grid-gap: 20px;
         }
+        .found {
+            background: yellow;
+        }
     </style>
 </head>
 <body>
@@ -94,14 +97,14 @@
             <br />
         </div>
     </form>
-
+    <%=cMyValuex%>
     <div class="grid-container-group">
         <% foreach (var group in SEAT_MAP)
             { %>
             <div class="grid-container">
                 <% foreach (var seatPos in group.seatPostions)
                     { %>
-                    <div class="grid-item"><%-- id="testSpace" runat="server" --%>
+                    <div class="grid-item <%= checkSearch(group.group, seatPos.x, seatPos.y) ? "found" : null %>">
                         <%=  getEmpNameBySeat(group.group, seatPos.x, seatPos.y)%>
                         <%--<asp:Label runat="server" Text='<%# getEmpNameBySeat(group.group, seatPos.x, seatPos.y) %>'></asp:Label>--%>
                     </div>

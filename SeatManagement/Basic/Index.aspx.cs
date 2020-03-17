@@ -9,6 +9,7 @@ namespace SeatManagement.Basic
     {
         public int x { get; set; }
         public int y { get; set; }
+        public string group { get; set; }
     }
     public class Group
     {
@@ -18,8 +19,9 @@ namespace SeatManagement.Basic
 
     public partial class Index : System.Web.UI.Page
     {
-
         public List<Group> SEAT_MAP = new List<Group>();
+        public List<SeatPosition> chairSearch = new List<SeatPosition>();
+        public string cMyValuex = "some string debug here";
         string connetionString = ConfigurationManager.ConnectionStrings["SeatManagementConnectionString"].ConnectionString;
         SqlConnection cnn;
         SqlCommand command;
@@ -80,19 +82,43 @@ namespace SeatManagement.Basic
                                 JOIN DEPARTMENT
                                 ON EMPLOYEE.DEPARTMENT_CODE = DEPARTMENT.DEPARTMENT_CODE
                                 WHERE KATAKANA_NAME LIKE '%" + SearchParam.Text + "%'";
-
             command = new SqlCommand(sql, cnn);
             command.Prepare();
             dataReader = command.ExecuteReader();
             GridView1.DataSource = dataReader;
             GridView1.DataBind();
+            command.Dispose();
+            dataReader.Close();
+
+            command = new SqlCommand(sql, cnn);
+            command.Prepare(); 
+            dataReader = command.ExecuteReader();
             while (dataReader.Read())
             {
-                string SEAT_GROUP = dataReader["SEAT_GROUP"].ToString();
+                SeatPosition chair = new SeatPosition();
+                chair.group = dataReader["SEAT_GROUP"].ToString();
+                chair.x = int.Parse(dataReader["SEAT_POSITION_X"].ToString());
+                chair.y = int.Parse(dataReader["SEAT_POSITION_Y"].ToString());
+                cMyValuex += chair.group+ chair.x+ chair.y;
+                chairSearch.Add(chair);
             }
-
             dataReader.Close();
             command.Dispose();
+        }
+        public bool checkSearch(string group, int x, int y)
+        {
+            var foundChair = new SeatPosition
+            {
+                x = x,
+                y = y,
+                group = group
+            };
+            return this.chairSearch.FindIndex(item =>
+            {
+                return item.x == foundChair.x && 
+                item.y == foundChair.y && 
+                item.group == foundChair.group;
+            }) > -1;
         }
     }
 }
