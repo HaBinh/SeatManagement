@@ -8,28 +8,29 @@
     <title></title>
     <style type="text/css">
         .box-name {
-          border: 1px green solid;
-          padding: 10px;
+            border: 1px green solid;
+            padding: 10px;
         }
 
         .grid-container {
-          display: grid;
-          grid-template-columns: auto auto;
-          background-color: #2196F3;
-          padding: 10px;
+            display: grid;
+            grid-template-columns: auto auto;
+            background-color: #2196F3;
+            padding: 10px;
         }
+
         .grid-item {
-          background-color: rgba(255, 255, 255, 0.8);
-          border: 1px solid rgba(0, 0, 0, 0.8);
-          padding: 20px;
-          font-size: 30px;
-          text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            font-size: 30px;
+            text-align: center;
         }
 
         .grid-container-group {
-          display: grid;
-          grid-template-columns: auto auto;
-          grid-gap: 20px;
+            display: grid;
+            grid-template-columns: auto auto;
+            grid-gap: 20px;
         }
     </style>
 </head>
@@ -42,24 +43,18 @@
             <br />
             <asp:Label ID="Label2" runat="server" Text="検索文字"></asp:Label>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:SeatManagementConnectionString %>"
-                SelectCommand=" SELECT ACCOUNT_TYPE.ACCOUNT_TYPE_NAME AS ACCOUNT_TYPE_NAME, DEPARTMENT.[DEPARTMENT_NAME ] AS DEPARTMENT_NAME, EMPLOYEE.* FROM EMPLOYEE
-                                JOIN ACCOUNT_TYPE
-                                ON EMPLOYEE.ACCOUNT_TYPE_CODE = ACCOUNT_TYPE.ACCOUNT_TYPE_CODE
-                                JOIN DEPARTMENT
-                                ON EMPLOYEE.DEPARTMENT_CODE = DEPARTMENT.DEPARTMENT_CODE"
-                FilterExpression="KATAKANA_NAME LIKE '%{0}%'">
+            <%--            <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:SeatManagementConnectionString %>">
                 <FilterParameters>
                     <asp:ControlParameter Name="SearchParam" ControlID="SearchParam" PropertyName="Text" />
                 </FilterParameters>
-            </asp:SqlDataSource>
+            </asp:SqlDataSource>--%>
             <asp:TextBox ID="SearchParam" runat="server"></asp:TextBox>
             &nbsp;&nbsp;&nbsp;&nbsp;
             <asp:Button ID="ButtonSearch" runat="server" Text="検索" OnClick="ButtonSearch_Click" />
             <br />
             <br />
             <br />
-            <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" CellPadding="4" DataKeyNames="EMPLOYEE_CODE" DataSourceID="SqlDataSource1" ForeColor="#333333" GridLines="None">
+            <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" CellPadding="4" DataKeyNames="EMPLOYEE_CODE" ForeColor="#333333" GridLines="None">
                 <AlternatingRowStyle BackColor="White" />
                 <Columns>
                     <asp:BoundField DataField="EMPLOYEE_CODE" HeaderText="アカウントコード" ReadOnly="True" SortExpression="EMPLOYEE_CODE" />
@@ -68,7 +63,7 @@
                     <asp:TemplateField HeaderText="性別" SortExpression="SEX">
                         <ItemTemplate>
                             <asp:Label ID="SexLabel" runat="server"
-                                Text='<%# ((int)Eval("SEX")) == 1?"男性":"女性" %>'>
+                                Text='<%# ((string)Eval("SEX_TYPE")) == "1"?"男性":"女性" %>'>
                             </asp:Label>
                         </ItemTemplate>
                     </asp:TemplateField>
@@ -95,7 +90,6 @@
                 <SortedDescendingCellStyle BackColor="#E9EBEF" />
                 <SortedDescendingHeaderStyle BackColor="#4870BE" />
             </asp:GridView>
-
             <br />
             <br />
         </div>
@@ -104,14 +98,15 @@
     <div class="grid-container-group">
         <% foreach (var group in SEAT_MAP)
             { %>
-        <div class="grid-container">
-            <% foreach (var seatPos in group.seatPostions){ %>
-            <div class="grid-item">
-                <%=  getEmpNameBySeat(group.group, seatPos.x, seatPos.y)%>
-                <%--<asp:Label runat="server" Text='<%# getEmpNameBySeat("", 1, 1) %>'></asp:Label>--%>
+            <div class="grid-container">
+                <% foreach (var seatPos in group.seatPostions)
+                    { %>
+                    <div class="grid-item"><%-- id="testSpace" runat="server" --%>
+                        <%=  getEmpNameBySeat(group.group, seatPos.x, seatPos.y)%>
+                        <%--<asp:Label runat="server" Text='<%# getEmpNameBySeat(group.group, seatPos.x, seatPos.y) %>'></asp:Label>--%>
+                    </div>
+                <% } %>
             </div>
-            <% } %>
-        </div>
         <% } %>
     </div>
 

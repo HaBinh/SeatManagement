@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -23,17 +22,14 @@ namespace SeatManagement.Basic
         public List<Group> SEAT_MAP = new List<Group>();
         string connetionString = ConfigurationManager.ConnectionStrings["SeatManagementConnectionString"].ConnectionString;
         SqlConnection cnn;
-
+        SqlCommand command;
+        SqlDataReader dataReader;
         protected void Page_Load(object sender, EventArgs e)
         {
             this.ConnectDB();
             this.InitSeatLayoutData();
         }
 
-        protected void ButtonSearch_Click(object sender, EventArgs e)
-        {
-            
-        }
         protected void ConnectDB()
         {
             cnn = new SqlConnection(connetionString);
@@ -62,11 +58,10 @@ namespace SeatManagement.Basic
         }
         public string getEmpNameBySeat(string group, int x, int y)
         {
-            SqlCommand command;
-            SqlDataReader dataReader;
             string output = "";
             string sql = "Select NAME from employee where SEAT_GROUP = '" + group + "' and SEAT_POSITION_X = " + x + " and SEAT_POSITION_Y = " + y;
             command = new SqlCommand(sql, cnn);
+            command.Prepare();
             dataReader = command.ExecuteReader();
             while (dataReader.Read())
             {
@@ -76,6 +71,28 @@ namespace SeatManagement.Basic
             dataReader.Close();
             command.Dispose();
             return output;
+        }
+        protected void ButtonSearch_Click(object sender, EventArgs e)
+        {
+            string sql = @" SELECT ACCOUNT_TYPE.ACCOUNT_TYPE_NAME AS ACCOUNT_TYPE_NAME, DEPARTMENT.[DEPARTMENT_NAME ] AS DEPARTMENT_NAME, EMPLOYEE.* FROM EMPLOYEE
+                                JOIN ACCOUNT_TYPE
+                                ON EMPLOYEE.ACCOUNT_TYPE_CODE = ACCOUNT_TYPE.ACCOUNT_TYPE_CODE
+                                JOIN DEPARTMENT
+                                ON EMPLOYEE.DEPARTMENT_CODE = DEPARTMENT.DEPARTMENT_CODE
+                                WHERE KATAKANA_NAME LIKE '%" + SearchParam.Text + "%'";
+
+            command = new SqlCommand(sql, cnn);
+            command.Prepare();
+            dataReader = command.ExecuteReader();
+            GridView1.DataSource = dataReader;
+            GridView1.DataBind();
+            while (dataReader.Read())
+            {
+                string SEAT_GROUP = dataReader["SEAT_GROUP"].ToString();
+            }
+
+            dataReader.Close();
+            command.Dispose();
         }
     }
 }
