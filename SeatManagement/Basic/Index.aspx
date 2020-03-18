@@ -5,63 +5,72 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title></title>
+    <title>座席管理システム</title>
     <style type="text/css">
-        .box-name {
-            border: 1px green solid;
-            padding: 10px;
+        body {
+            padding: 30px 5%
+        }
+
+        .grid-container-group {
+            padding: 0 10px;
+            display: grid;
+            grid-template-columns: 500px 500px;
+            grid-gap: 50px;
         }
 
         .grid-container {
             display: grid;
-            grid-template-columns: auto auto;
-            background-color: #2196F3;
-            padding: 10px;
+            grid-template-columns: 250px 250px;
+            grid-template-rows: 90px auto auto auto;
+            border: 1px solid rgba(0, 0, 0, 0.8);
         }
 
         .grid-item {
-            background-color: rgba(255, 255, 255, 0.8);
             border: 1px solid rgba(0, 0, 0, 0.8);
-            padding: 20px;
+            padding: 15px;
             font-size: 30px;
             text-align: center;
         }
 
-        .grid-container-group {
-            display: grid;
-            grid-template-columns: auto auto;
-            grid-gap: 20px;
-        }
         .found {
             background: yellow;
+        }
+
+        .message {
+            color: #9a3254;
+            border: 1px solid;
+            padding: 10px;
+            background: antiquewhite;
         }
     </style>
 </head>
 <body>
+    <div class="<%= systemMessage != "" ?"message":null %>">
+        <%=systemMessage %>
+    </div>
     <form id="form1" runat="server">
         <div>
             <br />
             <asp:Label ID="Label1" runat="server" Text="座席管理システム"></asp:Label>
             <br />
             <br />
+            <br />
             <asp:Label ID="Label2" runat="server" Text="検索文字"></asp:Label>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <%--            <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:SeatManagementConnectionString %>">
-                <FilterParameters>
-                    <asp:ControlParameter Name="SearchParam" ControlID="SearchParam" PropertyName="Text" />
-                </FilterParameters>
-            </asp:SqlDataSource>--%>
             <asp:TextBox ID="SearchParam" runat="server"></asp:TextBox>
             &nbsp;&nbsp;&nbsp;&nbsp;
             <asp:Button ID="ButtonSearch" runat="server" Text="検索" OnClick="ButtonSearch_Click" />
             <br />
             <br />
-            <br />
-            <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" CellPadding="4" DataKeyNames="EMPLOYEE_CODE" ForeColor="#333333" GridLines="None">
+            <asp:GridView ID="GridView1" runat="server" 
+                AutoGenerateColumns="False" 
+                CellPadding="4" DataKeyNames="EMPLOYEE_CODE" ForeColor="#333333" 
+                AllowSorting="True" PageSize="2"
+                onpageindexchanging="GridView1_PageIndexChanging" AllowPaging="True" >
                 <AlternatingRowStyle BackColor="White" />
                 <Columns>
                     <asp:BoundField DataField="EMPLOYEE_CODE" HeaderText="アカウントコード" ReadOnly="True" SortExpression="EMPLOYEE_CODE" />
-                    <asp:BoundField DataField="NAME " HeaderText="氏名 " SortExpression="NAME " />
+                    <asp:BoundField DataField="EMPLOYEE_NAME" HeaderText="氏名 " SortExpression="EMPLOYEE_NAME" />
                     <asp:BoundField DataField="KATAKANA_NAME" HeaderText="カタカナ" SortExpression="KATAKANA_NAME" />
                     <asp:TemplateField HeaderText="性別" SortExpression="SEX">
                         <ItemTemplate>
@@ -85,6 +94,7 @@
                 <EditRowStyle BackColor="#2461BF" />
                 <FooterStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" />
                 <HeaderStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" />
+                <PagerSettings PageButtonCount="5" />
                 <PagerStyle BackColor="#2461BF" ForeColor="White" HorizontalAlign="Center" />
                 <RowStyle BackColor="#EFF3FB" />
                 <SelectedRowStyle BackColor="#D1DDF1" Font-Bold="True" ForeColor="#333333" />
@@ -97,21 +107,20 @@
             <br />
         </div>
     </form>
-    <%=cMyValuex%>
+
     <div class="grid-container-group">
         <% foreach (var group in SEAT_MAP)
             { %>
-            <div class="grid-container">
-                <% foreach (var seatPos in group.seatPostions)
-                    { %>
-                    <div class="grid-item <%= checkSearch(group.group, seatPos.x, seatPos.y) ? "found" : null %>">
-                        <%=  getEmpNameBySeat(group.group, seatPos.x, seatPos.y)%>
-                        <%--<asp:Label runat="server" Text='<%# getEmpNameBySeat(group.group, seatPos.x, seatPos.y) %>'></asp:Label>--%>
-                    </div>
-                <% } %>
+        <div class="grid-container">
+            <% foreach (var seatPos in group.seatPostions)
+                { %>
+            <div class="grid-item <%= checkSearch(group.group, seatPos.x, seatPos.y) ? "found" : null %>">
+                <%=  getEmpNameBySeat(group.group, seatPos.x, seatPos.y)%>
+                <%--<asp:Label runat="server" Text='<%# getEmpNameBySeat(group.group, seatPos.x, seatPos.y) %>'></asp:Label>--%>
             </div>
+            <% } %>
+        </div>
         <% } %>
     </div>
-
 </body>
 </html>
