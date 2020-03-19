@@ -65,8 +65,7 @@
             <asp:GridView ID="GridView1" runat="server" 
                 AutoGenerateColumns="False" 
                 CellPadding="4" DataKeyNames="EMPLOYEE_CODE" ForeColor="#333333" 
-                AllowSorting="True" PageSize="2"
-                onpageindexchanging="GridView1_PageIndexChanging" AllowPaging="True" >
+                PageSize="2">
                 <AlternatingRowStyle BackColor="White" />
                 <Columns>
                     <asp:BoundField DataField="EMPLOYEE_CODE" HeaderText="アカウントコード" ReadOnly="True" SortExpression="EMPLOYEE_CODE" />
@@ -104,10 +103,15 @@
                 <SortedDescendingHeaderStyle BackColor="#4870BE" />
             </asp:GridView>
             <br />
+            <asp:Repeater ID="rptPager" runat="server">
+                <ItemTemplate>
+                    <asp:LinkButton ID="lnkPage" runat="server" Text = '<%#Eval("Text") %>' CommandArgument = '<%# Eval("Value") %>' Enabled = '<%# Eval("Enabled") %>' OnClick = "Page_Changed"></asp:LinkButton>
+                </ItemTemplate>
+            </asp:Repeater>
             <br />
         </div>
     </form>
-
+    
     <div class="grid-container-group">
         <% foreach (var group in SEAT_MAP)
             { %>

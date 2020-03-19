@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.Data;
 
 namespace SeatManagement.Basic
 {
@@ -77,17 +81,17 @@ namespace SeatManagement.Basic
             {
                 output += dataReader.GetValue(0);
             }
-            output = output.Equals("")? "　" : output.Split('　')[0] ;
+            output = output.Equals("") ? "　" : output.Split('　')[0];
             dataReader.Close();
             command.Dispose();
             return output;
         }
-       
-        protected　void GridView1_PageIndexChanging(object sender, GridViewPageEventArgs e)
-        {
-            GridView1.PageIndex = e.NewPageIndex;
-            //refreshdata();
-        }
+
+        /// <summary>
+        /// 検索ボタン押下
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         protected void ButtonSearch_Click(object sender, EventArgs e)
         {
             string param = SearchParam.Text;
@@ -101,45 +105,13 @@ namespace SeatManagement.Basic
                 systemMessage = "カタカナを入力してください。";
                 return;
             }
-            string sql = @" SELECT ACCOUNT_TYPE.ACCOUNT_TYPE_NAME AS ACCOUNT_TYPE_NAME, DEPARTMENT.[DEPARTMENT_NAME ] AS DEPARTMENT_NAME, EMPLOYEE.* FROM EMPLOYEE
-                                JOIN ACCOUNT_TYPE
-                                ON EMPLOYEE.ACCOUNT_TYPE_CODE = ACCOUNT_TYPE.ACCOUNT_TYPE_CODE
-                                JOIN DEPARTMENT
-                                ON EMPLOYEE.DEPARTMENT_CODE = DEPARTMENT.DEPARTMENT_CODE
-                                WHERE KATAKANA_NAME LIKE '%" + param + "%' ORDER BY EMPLOYEE_CODE ASC";
-            command = new SqlCommand(sql, cnn);
-            command.Prepare();
-            dataReader = command.ExecuteReader();
-            if (!dataReader.HasRows)
-            {
-                systemMessage = "対象データが見つかりません。";
-                dataReader.Close();
-                command.Dispose();
-                return;
-            }
-            GridView1.DataSource = dataReader;
-            GridView1.DataBind();
-            command.Dispose();
-            dataReader.Close();
+            this.GetEmployeesPageWise(1, param);
 
-            command = new SqlCommand(sql, cnn);
-            command.Prepare(); 
-            dataReader = command.ExecuteReader();
-            while (dataReader.Read())
-            {
-                SeatPosition chair = new SeatPosition();
-                chair.group = dataReader["SEAT_GROUP"].ToString();
-                chair.x = int.Parse(dataReader["SEAT_POSITION_X"].ToString());
-                chair.y = int.Parse(dataReader["SEAT_POSITION_Y"].ToString());
-                chairSearch.Add(chair);
-            }
-            dataReader.Close();
-            command.Dispose();
         }
 
         private bool IsKatakanaString(string str)
         {
-            for (int i=0; i< str.Length; i++)
+            for (int i = 0; i < str.Length; i++)
             {
                 if (IsKatakana(str[i]))
                 {
@@ -161,10 +133,83 @@ namespace SeatManagement.Basic
         {
             return this.chairSearch.FindIndex(item =>
             {
-                return item.x == x && 
-                item.y == y && 
+                return item.x == x &&
+                item.y == y &&
                 item.group == group;
             }) > -1;
+        }
+        private void GetEmployeesPageWise(int pageIndex, string param)
+        {
+
+            using (SqlCommand cmd = new SqlCommand("GetEmployeesPageWise", cnn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@PageIndex", pageIndex);
+                cmd.Parameters.AddWithValue("@PageSize", 5);
+                cmd.Parameters.AddWithValue("@Param", param);
+                cmd.Parameters.Add("@RecordCount", SqlDbType.Int, 4);
+                cmd.Parameters["@RecordCount"].Direction = ParameterDirection.Output;
+                IDataReader idr = cmd.ExecuteReader();
+                GridView1.DataSource = idr;
+                GridView1.DataBind();
+                idr.Close();
+                int recordCount = Convert.ToInt32(cmd.Parameters["@RecordCount"].Value);
+                this.PopulatePager(recordCount, pageIndex);
+            }
+            createChairSearch(param);
+        }
+
+        private void createChairSearch(string param)
+        {
+            string sql = @" SELECT ACCOUNT_TYPE.ACCOUNT_TYPE_NAME AS ACCOUNT_TYPE_NAME, DEPARTMENT.[DEPARTMENT_NAME ] AS DEPARTMENT_NAME, EMPLOYEE.* FROM EMPLOYEE
+                                JOIN ACCOUNT_TYPE
+                                ON EMPLOYEE.ACCOUNT_TYPE_CODE = ACCOUNT_TYPE.ACCOUNT_TYPE_CODE
+                                JOIN DEPARTMENT
+                                ON EMPLOYEE.DEPARTMENT_CODE = DEPARTMENT.DEPARTMENT_CODE
+                                WHERE KATAKANA_NAME LIKE '%" + param + "%' ORDER BY EMPLOYEE_CODE ASC";
+
+            command = new SqlCommand(sql, cnn);
+            command.Prepare();
+            dataReader = command.ExecuteReader();
+            if (!dataReader.HasRows)
+            {
+                systemMessage = "対象データが見つかりません。";
+                dataReader.Close();
+                command.Dispose();
+                return;
+            }
+            while (dataReader.Read())
+            {
+                SeatPosition chair = new SeatPosition();
+                chair.group = dataReader["SEAT_GROUP"].ToString();
+                chair.x = int.Parse(dataReader["SEAT_POSITION_X"].ToString());
+                chair.y = int.Parse(dataReader["SEAT_POSITION_Y"].ToString());
+                chairSearch.Add(chair);
+            }
+            dataReader.Close();
+            command.Dispose();
+        }
+        private void PopulatePager(int recordCount, int currentPage)
+        {
+            double dblPageCount = (double)((decimal)recordCount / 5);
+            int pageCount = (int)Math.Ceiling(dblPageCount);
+            List<ListItem> pages = new List<ListItem>();
+            if (pageCount > 0)
+            {
+                pages.Add(new ListItem("First", "1", currentPage > 1));
+                for (int i = 1; i <= pageCount; i++)
+                {
+                    pages.Add(new ListItem(i.ToString(), i.ToString(), i != currentPage));
+                }
+                pages.Add(new ListItem("Last", pageCount.ToString(), currentPage < pageCount));
+            }
+            rptPager.DataSource = pages;
+            rptPager.DataBind();
+        }
+        protected void Page_Changed(object sender, EventArgs e)
+        {
+            int pageIndex = int.Parse((sender as LinkButton).CommandArgument);
+            this.GetEmployeesPageWise(pageIndex, SearchParam.Text);
         }
     }
 }
