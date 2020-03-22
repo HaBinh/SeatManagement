@@ -26,7 +26,7 @@ namespace SeatManagement.Basic
         public const string MESS_KATAKANA_REQUIRED = "カタカナを入力してください。";
         public const string MESS_NOT_FOUND = "対象データが見つかりません。";
         public string systemMessage = "";
-        public List<Group> SEAT_MAP = new List<Group>();
+        public List<Group> SEAT_MAP = new List<Group>();  //座席図を書くため
         string[] SEAT_GROUP = new string[6] { "A", "D", "B", "E", "C", "F" };
         public List<SeatPosition> foundSeats = new List<SeatPosition>();
         string connetionString = ConfigurationManager.ConnectionStrings["SeatManagementConnectionString"].ConnectionString;
@@ -37,31 +37,48 @@ namespace SeatManagement.Basic
             this.InitSeatLayoutData();
         }
 
+        /// <summary>
+        /// データベース接続
+        /// </summary>
         protected void ConnectDB()
         {
             cnn = new SqlConnection(connetionString);
             cnn.Open();
         }
-        
+
+        /// <summary>
+        /// SEAT_MAP = [{   group,
+        ///                 seatPostions: [ {x, y}, ... ]
+        ///             }, ... ]
+        /// を作る
+        /// </summary>
         protected void InitSeatLayoutData()
         {
             for (int i = 0; i < 4; i++)
             {
-                List<SeatPosition> SEAT_POSITIONS = new List<SeatPosition>();
+                List<SeatPosition> seatPostions = new List<SeatPosition>();
                 for (int y = 1; y <= 4; y++)
                 {
                     for (int x = 1; x <= 2; x++)
                     {
-                        SEAT_POSITIONS.Add(new SeatPosition { x = x, y = y });
+                        seatPostions.Add(new SeatPosition { x = x, y = y });
                     }
                 }
-                SEAT_MAP.Add(new Group { group = SEAT_GROUP[i], seatPostions = SEAT_POSITIONS });
+                SEAT_MAP.Add(new Group { group = SEAT_GROUP[i], seatPostions = seatPostions });
             }
             SeatPosition[] tmp = { new SeatPosition { x = 1, y = 1 } };
-            List<SeatPosition> SEAT_POSITIONS_C_F = new List<SeatPosition>(tmp);
-            SEAT_MAP.Add(new Group { group = SEAT_GROUP[4], seatPostions = SEAT_POSITIONS_C_F });
-            SEAT_MAP.Add(new Group { group = SEAT_GROUP[5], seatPostions = SEAT_POSITIONS_C_F });
+            List<SeatPosition> seatPostionsCF = new List<SeatPosition>(tmp);
+            SEAT_MAP.Add(new Group { group = SEAT_GROUP[4], seatPostions = seatPostionsCF });
+            SEAT_MAP.Add(new Group { group = SEAT_GROUP[5], seatPostions = seatPostionsCF });
         }
+
+        /// <summary>
+        /// DBに氏名を取得する
+        /// </summary>
+        /// <param name="group">島</param>
+        /// <param name="x">座席X</param>
+        /// <param name="y">座席Y</param>
+        /// <returns></returns>
         public string getEmpNameBySeat(string group, int x, int y)
         {
             SqlCommand command;
@@ -105,6 +122,11 @@ namespace SeatManagement.Basic
             this.GetEmployeesPageWise(1, param);
         }
 
+        /// <summary>
+        /// 文字列に含まれている文字がすべてカタカナかをチェックする
+        /// </summary>
+        /// <param name="str">文字列</param>
+        /// <returns></returns>
         private bool IsKatakanaString(string str)
         {
             for (int i = 0; i < str.Length; i++)
@@ -117,13 +139,24 @@ namespace SeatManagement.Basic
             return true;
         }
 
-        public static bool IsKatakana(char c)
+        /// <summary>
+        /// 文字がカタカナかをチェックする
+        /// </summary>
+        /// <param name="c">文字</param>
+        /// <returns></returns>
+        private static bool IsKatakana(char c)
         {
             return ('\u30A0' <= c && c <= '\u30FF')
                 || ('\u31F0' <= c && c <= '\u31FF')
                 || ('\u3099' <= c && c <= '\u309C')
                 || ('\uFF65' <= c && c <= '\uFF9F');
         }
+
+        /// <summary>
+        /// DBに社員を検索する
+        /// </summary>
+        /// <param name="pageIndex">ページ目</param>
+        /// <param name="param">検索文字</param>
         private void GetEmployeesPageWise(int pageIndex, string param)
         {
             using (SqlCommand cmd = new SqlCommand("GetEmployeesPageWise", cnn))
@@ -146,7 +179,7 @@ namespace SeatManagement.Basic
                 idr.Close(); 
                 int recordCount = Convert.ToInt32(cmd.Parameters["@RecordCount"].Value);
                 this.PopulatePager(recordCount, pageIndex);
-                // tạo biến foundSeats lưu kết quả tìm kiếm
+                // 検索結果の座席を保存するため、foundSeats変数を作る
                 foreach (GridViewRow row in GridView1.Rows)
                 {
                     SeatPosition chair = new SeatPosition();
@@ -158,6 +191,12 @@ namespace SeatManagement.Basic
                 }
             }
         }
+
+        /// <summary>
+        /// ページングにデータを入力する
+        /// </summary>
+        /// <param name="recordCount">レコードの合計</param>
+        /// <param name="currentPage">現在のページ</param>
         private void PopulatePager(int recordCount, int currentPage)
         {
             double dblPageCount = (double)((decimal)recordCount / PAGE_SIZE);
@@ -175,12 +214,26 @@ namespace SeatManagement.Basic
             rptPager.DataSource = pages;
             rptPager.DataBind();
         }
+
+        /// <summary>
+        /// 他のページ目をクリックする時
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         protected void PageChanged(object sender, EventArgs e)
         {
             int pageIndex = int.Parse((sender as LinkButton).CommandArgument);
             this.GetEmployeesPageWise(pageIndex, SearchParam.Text);
         }
-        public bool CheckSearch(string group, int x, int y)
+        
+        /// <summary>
+        /// 座席が検索結果かをチェックする。
+        /// </summary>
+        /// <param name="group">島</param>
+        /// <param name="x">座席X</param>
+        /// <param name="y">座席Y</param>
+        /// <returns></returns>
+        public bool IsFoundSeat(string group, int x, int y)
         {
             return this.foundSeats.FindIndex(item =>
             {
@@ -189,6 +242,10 @@ namespace SeatManagement.Basic
                 item.group == group;
             }) > -1;
         }
+        
+        /// <summary>
+        /// レイアウトをリセットする
+        /// </summary>
         private void ResetData()
         {
             GridView1.DataSource = null;

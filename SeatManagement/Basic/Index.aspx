@@ -124,7 +124,7 @@
         <div class="grid-container">
             <% foreach (var seatPos in group.seatPostions)
                 { %>
-            <div class="grid-item <%= CheckSearch(group.group, seatPos.x, seatPos.y) ? "found" : null %>">
+            <div class="grid-item <%= IsFoundSeat(group.group, seatPos.x, seatPos.y) ? "found" : null %>">
                 <%=  getEmpNameBySeat(group.group, seatPos.x, seatPos.y)%>
                 <%--<asp:Label runat="server" Text='<%# getEmpNameBySeat(group.group, seatPos.x, seatPos.y) %>'></asp:Label>--%>
             </div>
