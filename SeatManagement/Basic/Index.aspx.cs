@@ -189,7 +189,7 @@ namespace SeatManagement.Basic
                     foreach (GridViewRow row in GridView1.Rows)
                     {
                         SeatPosition chair = new SeatPosition();
-                        chair.group = row.Cells[6].Text; //seat_group
+                        chair.group = ((Label)row.FindControl("SeatGroup")).Text; //seat_group
                         string xy = ((Label)row.FindControl("SeatPosition")).Text; //seat_group_x - seat_group_y
                         chair.x = int.Parse(xy.Split('-')[0]);  //seat_group_x 
                         chair.y = int.Parse(xy.Split('-')[1]);  //seat_group_y

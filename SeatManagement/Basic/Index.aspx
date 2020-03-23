@@ -89,7 +89,11 @@
                     </asp:TemplateField>
                     <asp:BoundField DataField="account_type_name" HeaderText="アカウント種別" />
                     <asp:BoundField DataField="department_name" HeaderText="所属部門" />
-                    <asp:BoundField DataField="seat_group" HeaderText="島" />
+                    <asp:TemplateField HeaderText="島">
+                        <ItemTemplate>
+                            <asp:Label ID="SeatGroup" runat="server" Text='<%# Eval("seat_group") %>' />
+                        </ItemTemplate>
+                    </asp:TemplateField>
                     <asp:TemplateField HeaderText="座席">
                         <ItemTemplate>
                             <asp:Label ID="SeatPosition" runat="server"
