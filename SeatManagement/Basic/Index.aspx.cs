@@ -12,6 +12,7 @@ namespace SeatManagement.Basic
         public int x { get; set; }
         public int y { get; set; }
         public string group { get; set; }
+        public string name { get; set; }
     }
     public class Group
     {
@@ -28,6 +29,7 @@ namespace SeatManagement.Basic
         public string systemMessage = "";
         public List<Group> SEAT_MAP = new List<Group>();  //座席図を書くため
         string[] SEAT_GROUP = new string[6] { "A", "D", "B", "E", "C", "F" };
+        public List<SeatPosition> allEmpNameData = new List<SeatPosition>();
         public List<SeatPosition> foundSeats = new List<SeatPosition>();
         string connectionString = ConfigurationManager.ConnectionStrings["SeatManagementConnectionString"].ConnectionString;
         SqlConnection cnn;
@@ -35,6 +37,44 @@ namespace SeatManagement.Basic
         {
             cnn = new SqlConnection(connectionString);
             this.InitSeatLayoutData();
+            this.GetAllEmpNameData();
+        }
+
+        /// <summary>
+        /// DBにすべて氏名を取得する。
+        /// </summary>
+        private void GetAllEmpNameData()
+        {
+            try
+            {
+                SqlCommand command;
+                SqlDataReader dataReader;
+                string sql = "SELECT seat_position_x, seat_position_y, seat_group, employee_name FROM employee";
+                command = new SqlCommand(sql, cnn);
+                command.Prepare();
+                cnn.Open();
+                dataReader = command.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    allEmpNameData.Add(new SeatPosition
+                    {
+                        x = int.Parse(dataReader.GetValue(0).ToString()),
+                        y = int.Parse(dataReader.GetValue(1).ToString()),
+                        group = dataReader.GetValue(2).ToString(),
+                        name = dataReader.GetValue(3).ToString(),
+                    });
+                }
+                dataReader.Close();
+                command.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error: " + ex);
+            }
+            finally
+            {
+                cnn.Close();
+            }
         }
 
         /// <summary>
@@ -64,7 +104,7 @@ namespace SeatManagement.Basic
         }
 
         /// <summary>
-        /// DBに氏名を取得する
+        /// 氏名を取得する
         /// </summary>
         /// <param name="group">島</param>
         /// <param name="x">座席X</param>
@@ -72,35 +112,18 @@ namespace SeatManagement.Basic
         /// <returns></returns>
         public string getEmpNameBySeat(string group, int x, int y)
         {
-            string output = "";
-            try
+            int resultIndex = this.allEmpNameData.FindIndex(item =>
             {
-                SqlCommand command;
-                SqlDataReader dataReader;
-                string sql = "SELECT employee_name FROM employee WHERE seat_group = '" + group
-                            + "' AND seat_position_x = " + x
-                            + " AND seat_position_y = " + y;
-                command = new SqlCommand(sql, cnn);
-                command.Prepare();
-                cnn.Open();
-                dataReader = command.ExecuteReader();
-                while (dataReader.Read())
-                {
-                    output += dataReader.GetValue(0);
-                }
-                output = output.Equals("") ? "　" : output.Split('　')[0];
-                dataReader.Close();
-                command.Dispose();
-            }
-            catch (Exception ex)
+                return item.x == x &&
+                       item.y == y &&
+                       item.group == group;
+            });
+            if (resultIndex > -1)
             {
-                System.Diagnostics.Debug.WriteLine("Error: " + ex);
+                string output = allEmpNameData[resultIndex].name;
+                return output.Split('　')[0];
             }
-            finally
-            {
-                cnn.Close();
-            }
-            return output;
+            return "　";
         }
 
         /// <summary>
