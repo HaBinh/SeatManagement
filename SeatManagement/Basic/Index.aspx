@@ -23,6 +23,7 @@
             grid-template-columns: 250px 250px;
             grid-template-rows: 80px auto auto auto;
             border: 1px solid rgba(0, 0, 0, 0.8);
+            margin-top: 1px;
         }
 
         .grid-item {
@@ -73,7 +74,7 @@
             <br />
             <br />
             <asp:GridView ID="GridView1" runat="server"
-                AutoGenerateColumns="False" CellPadding="4" DataKeyNames="employee_code" ForeColor="#333333" >
+                AutoGenerateColumns="False" CellPadding="4" DataKeyNames="employee_code" ForeColor="#333333">
                 <AlternatingRowStyle BackColor="White" />
                 <Columns>
                     <asp:BoundField DataField="employee_code" HeaderText="アカウントコード" />

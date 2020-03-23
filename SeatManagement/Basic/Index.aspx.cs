@@ -29,21 +29,12 @@ namespace SeatManagement.Basic
         public List<Group> SEAT_MAP = new List<Group>();  //座席図を書くため
         string[] SEAT_GROUP = new string[6] { "A", "D", "B", "E", "C", "F" };
         public List<SeatPosition> foundSeats = new List<SeatPosition>();
-        string connetionString = ConfigurationManager.ConnectionStrings["SeatManagementConnectionString"].ConnectionString;
+        string connectionString = ConfigurationManager.ConnectionStrings["SeatManagementConnectionString"].ConnectionString;
         SqlConnection cnn;
         protected void Page_Load(object sender, EventArgs e)
         {
-            this.ConnectDB();
+            cnn = new SqlConnection(connectionString);
             this.InitSeatLayoutData();
-        }
-
-        /// <summary>
-        /// データベース接続
-        /// </summary>
-        protected void ConnectDB()
-        {
-            cnn = new SqlConnection(connetionString);
-            cnn.Open();
         }
 
         /// <summary>
@@ -81,22 +72,34 @@ namespace SeatManagement.Basic
         /// <returns></returns>
         public string getEmpNameBySeat(string group, int x, int y)
         {
-            SqlCommand command;
-            SqlDataReader dataReader;
             string output = "";
-            string sql = "SELECT employee_name FROM employee WHERE seat_group = '" + group 
-                        + "' AND seat_position_x = " + x 
-                        + " AND seat_position_y = " + y;
-            command = new SqlCommand(sql, cnn);
-            command.Prepare();
-            dataReader = command.ExecuteReader();
-            while (dataReader.Read())
+            try
             {
-                output += dataReader.GetValue(0);
+                SqlCommand command;
+                SqlDataReader dataReader;
+                string sql = "SELECT employee_name FROM employee WHERE seat_group = '" + group
+                            + "' AND seat_position_x = " + x
+                            + " AND seat_position_y = " + y;
+                command = new SqlCommand(sql, cnn);
+                command.Prepare();
+                cnn.Open();
+                dataReader = command.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    output += dataReader.GetValue(0);
+                }
+                output = output.Equals("") ? "　" : output.Split('　')[0];
+                dataReader.Close();
+                command.Dispose();
             }
-            output = output.Equals("") ? "　" : output.Split('　')[0];
-            dataReader.Close();
-            command.Dispose();
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error: " + ex);
+            }
+            finally
+            {
+                cnn.Close();
+            }
             return output;
         }
 
@@ -111,7 +114,7 @@ namespace SeatManagement.Basic
             string param = SearchParam.Text;
             if (param.Length == 0)
             {
-                systemMessage = MESS_SEARCH_PARAM_REQUIRED; 
+                systemMessage = MESS_SEARCH_PARAM_REQUIRED;
                 return;
             }
             if (IsKatakanaString(param))
@@ -159,36 +162,48 @@ namespace SeatManagement.Basic
         /// <param name="param">検索文字</param>
         private void GetEmployeesPageWise(int pageIndex, string param)
         {
-            using (SqlCommand cmd = new SqlCommand("GetEmployeesPageWise", cnn))
+            try
             {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@PageIndex", pageIndex);
-                cmd.Parameters.AddWithValue("@PageSize", PAGE_SIZE);
-                cmd.Parameters.AddWithValue("@Param", param);
-                cmd.Parameters.Add("@RecordCount", SqlDbType.Int, 4);
-                cmd.Parameters["@RecordCount"].Direction = ParameterDirection.Output;
-                SqlDataReader idr = cmd.ExecuteReader();
-                if (!idr.HasRows)
+                using (SqlCommand cmd = new SqlCommand("GetEmployeesPageWise", cnn))
                 {
-                    systemMessage = MESS_NOT_FOUND; 
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@PageIndex", pageIndex);
+                    cmd.Parameters.AddWithValue("@PageSize", PAGE_SIZE);
+                    cmd.Parameters.AddWithValue("@Param", param);
+                    cmd.Parameters.Add("@RecordCount", SqlDbType.Int, 4);
+                    cmd.Parameters["@RecordCount"].Direction = ParameterDirection.Output;
+                    cnn.Open();
+                    SqlDataReader idr = cmd.ExecuteReader();
+                    if (!idr.HasRows)
+                    {
+                        systemMessage = MESS_NOT_FOUND;
+                        idr.Close();
+                        return;
+                    }
+                    GridView1.DataSource = idr;
+                    GridView1.DataBind();
                     idr.Close();
-                    return;
+                    int recordCount = Convert.ToInt32(cmd.Parameters["@RecordCount"].Value);
+                    this.PopulatePager(recordCount, pageIndex);
+                    // 検索結果の座席を保存するため、foundSeats変数を作る
+                    foreach (GridViewRow row in GridView1.Rows)
+                    {
+                        SeatPosition chair = new SeatPosition();
+                        chair.group = row.Cells[6].Text; //seat_group
+                        string xy = ((Label)row.FindControl("SeatPosition")).Text; //seat_group_x - seat_group_y
+                        chair.x = int.Parse(xy.Split('-')[0]);  //seat_group_x 
+                        chair.y = int.Parse(xy.Split('-')[1]);  //seat_group_y
+                        foundSeats.Add(chair);
+                    }
                 }
-                GridView1.DataSource = idr;
-                GridView1.DataBind();
-                idr.Close(); 
-                int recordCount = Convert.ToInt32(cmd.Parameters["@RecordCount"].Value);
-                this.PopulatePager(recordCount, pageIndex);
-                // 検索結果の座席を保存するため、foundSeats変数を作る
-                foreach (GridViewRow row in GridView1.Rows)
-                {
-                    SeatPosition chair = new SeatPosition();
-                    chair.group = row.Cells[6].Text; //seat_group
-                    string xy = ((Label)row.FindControl("SeatPosition")).Text; //seat_group_x - seat_group_y
-                    chair.x = int.Parse(xy.Split('-')[0]);  //seat_group_x 
-                    chair.y = int.Parse(xy.Split('-')[1]);  //seat_group_y
-                    foundSeats.Add(chair);
-                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error: " + ex);
+            }
+            finally
+            {
+                cnn.Close();
             }
         }
 
@@ -216,7 +231,7 @@ namespace SeatManagement.Basic
         }
 
         /// <summary>
-        /// 他のページ目をクリックする時
+        /// 他のページをクリックする時
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -225,9 +240,9 @@ namespace SeatManagement.Basic
             int pageIndex = int.Parse((sender as LinkButton).CommandArgument);
             this.GetEmployeesPageWise(pageIndex, SearchParam.Text);
         }
-        
+
         /// <summary>
-        /// 座席が検索結果かをチェックする。
+        /// 座席が検索結果と一致するかをチェックする。
         /// </summary>
         /// <param name="group">島</param>
         /// <param name="x">座席X</param>
@@ -242,7 +257,7 @@ namespace SeatManagement.Basic
                 item.group == group;
             }) > -1;
         }
-        
+
         /// <summary>
         /// レイアウトをリセットする
         /// </summary>
