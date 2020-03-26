@@ -38,6 +38,7 @@ namespace SeatManagement.Basic
             cnn = new SqlConnection(connectionString);
             this.InitSeatLayoutData();
             this.GetAllEmpNameData();
+            SearchParam.Focus();
         }
 
         /// <summary>
