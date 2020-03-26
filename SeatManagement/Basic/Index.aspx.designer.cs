@@ -42,6 +42,15 @@ namespace SeatManagement.Basic
         protected global::System.Web.UI.WebControls.TextBox SearchParam;
 
         /// <summary>
+        /// hiddenSearchParam コントロール。
+        /// </summary>
+        /// <remarks>
+        /// 自動生成されたフィールド。
+        /// 変更するには、フィールドの宣言をデザイナー ファイルから分離コード ファイルに移動します。
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlInputHidden hiddenSearchParam;
+
+        /// <summary>
         /// ButtonSearch コントロール。
         /// </summary>
         /// <remarks>

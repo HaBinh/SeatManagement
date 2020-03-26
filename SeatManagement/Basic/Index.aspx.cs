@@ -136,6 +136,7 @@ namespace SeatManagement.Basic
         {
             this.ResetData();
             string param = SearchParam.Text;
+            hiddenSearchParam.Value = param;
             if (param.Length == 0)
             {
                 systemMessage = MESS_SEARCH_PARAM_REQUIRED;
@@ -262,7 +263,8 @@ namespace SeatManagement.Basic
         protected void PageChanged(object sender, EventArgs e)
         {
             int pageIndex = int.Parse((sender as LinkButton).CommandArgument);
-            this.GetEmployeesPageWise(pageIndex, SearchParam.Text);
+            this.GetEmployeesPageWise(pageIndex, hiddenSearchParam.Value);
+            SearchParam.Text = hiddenSearchParam.Value;
         }
 
         /// <summary>
