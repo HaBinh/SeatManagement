@@ -68,7 +68,7 @@
             <br />
             <asp:Label ID="Label2" runat="server" Text="検索文字"></asp:Label>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <asp:TextBox ID="SearchParam" runat="server"></asp:TextBox>
+            <asp:TextBox ID="SearchParam" runat="server" MaxLength="20"></asp:TextBox>
             <input id="hiddenSearchParam" type="hidden" runat="server" />
             &nbsp;&nbsp;&nbsp;&nbsp;
             <asp:Button ID="ButtonSearch" runat="server" Text="検索" OnClick="ButtonSearch_Click" />
