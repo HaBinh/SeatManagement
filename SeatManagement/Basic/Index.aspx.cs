@@ -140,7 +140,7 @@ namespace SeatManagement.Basic
                 systemMessage = MESS_SEARCH_PARAM_REQUIRED;
                 return;
             }
-            if (IsKatakanaString(param))
+            if (!IsKatakanaString(param))
             {
                 systemMessage = MESS_KATAKANA_REQUIRED;
                 return;
@@ -157,7 +157,7 @@ namespace SeatManagement.Basic
         {
             for (int i = 0; i < str.Length; i++)
             {
-                if (IsKatakana(str[i]))
+                if (!IsKatakana(str[i]))
                 {
                     return false;
                 }
