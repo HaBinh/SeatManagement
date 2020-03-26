@@ -24,6 +24,7 @@
             grid-template-rows: 80px auto auto auto;
             border: 1px solid rgba(0, 0, 0, 0.8);
             margin-top: 1px;
+            margin-bottom: 3px;
         }
 
         .grid-item {
@@ -39,7 +40,6 @@
 
         .message {
             color: #9a3254;
-            border: 1px solid;
             padding: 10px;
             background: antiquewhite;
         }
